@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MAI-Bot</title>
+  <link rel="icon" type="image/png" href="weblogo.png">
+  <style>
+    /* ベースリセット */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      overflow: hidden; /* 親ページはスクロールさせない */
+      font-family: sans-serif;
+    }
+
+    #container {
+      display: flex;
+      height: 100%;
+    }
+
+    /* サイドメニュー */
+    #sidebar {
+      width: 250px;
+      background-color: #2559AB;
+      color: white;
+      padding: 20px;
+      box-sizing: border-box;
+    }
+    #sidebar img {
+      max-width: 120px;
+      height: auto;
+      margin-bottom: 20px;
+    }
+    #sidebar h1 {
+      margin: 0 0 20px;
+      font-size: 1.2rem;
+    }
+    #sidebar ul { list-style: none; padding: 0; margin: 0; }
+    #sidebar li { margin-bottom: 15px; }
+    #sidebar a {
+      color: white;
+      text-decoration: none;
+      font-weight: bold;
+      display: block;
+      padding: 5px 0;
+      cursor: pointer;
+    }
+    #sidebar a:hover { text-decoration: underline; }
+
+    /* メイン表示領域 */
+    #main {
+      flex: 1;
+      background-color: white;
+      color: #2559AB;
+      box-sizing: border-box;
+      position: relative;
+    }
+    #contentFrame {
+      width: 100%; height: 100%; border: none; display: block;
+    }
+
+    /* モバイル時レイアウト */
+    @media (max-width: 768px) {
+      #container { flex-direction: column; }
+      #sidebar {
+        width: 100%; height: auto;
+        display: flex; flex-wrap: nowrap;
+        overflow-x: auto; white-space: nowrap;
+        padding: 10px; box-sizing: border-box;
+      }
+      #sidebar img { max-height: 24px; margin-right: 8px; margin-top: 2px; }
+      #sidebar h1 { display: none !important; }
+      #sidebar ul { display: flex; flex-direction: row; gap: 15px; margin: 0; padding: 0; }
+      #sidebar li { margin: 0; }
+      #sidebar a { padding: 10px 5px; display: inline-block; color: white; font-size: 0.9rem; white-space: nowrap; }
+      #main {
+        position: fixed; top: 42px; bottom: 0; left: 0; right: 0; padding: 0;
+      }
+      #contentFrame { position: absolute; top: 0; bottom: 0; width: 100%; height: 100%; }
+    }
+  </style>
+</head>
+<body>
+  <div id="container">
+    <nav id="sidebar">
+      <img src="logo.png" alt="Logo">
+      <h1>MAI-Bot</h1>
+      <ul>
+        <li><a onclick="showHome()">Home</a></li>
+        <li><a onclick="loadPage('https://interviewagent-ade3ejh3bncydwhx.eastus2-01.azurewebsites.net')">Interview Agent</a></li>
+        <li><a onclick="loadPage('https://maibottraining-fcc0fdedbjefd5cu.centralus-01.azurewebsites.net')">Chat for Training</a></li>
+        <li><a onclick="loadPage('https://maibotknowledge-e9b5f2d5cvbafdh7.centralus-01.azurewebsites.net')">Knowledge Base Collection</a></li>
+        <li><a href="#" id="chat-with-mai">Chat with MAI-Bot</a></li>
+      </ul>
+    </nav>
+    <section id="main">
+      <iframe id="contentFrame" name="contentFrame"></iframe>
+    </section>
+  </div>
+
+  <script>
+    const chatMaiUrl = 'https://maibot-01-c8d4b7czccbuadc6.centralus-01.azurewebsites.net';
+    // 初期画面のHTML（Chat with MAI-Botにid追加）
+    const homeHTML = `<!DOCTYPE html>
+  <html lang="ja">
+  <head><meta charset="UTF-8"><title>Welcome</title><style>body{margin:0;padding:20px;background:#fff;color:#2559AB;font-family:sans-serif}img{max-width:100px;display:block;margin-bottom:20px}h2{margin-top:0;font-size:1.5rem}h3{margin-bottom:5px;font-size:1.2rem}p{margin:0 0 20px;line-height:1.4}</style></head>
+  <body>
+    <img src="logo.png" alt="Logo">
+    <h2>MAI-Bot</h2>
+    <h3><a href="https://interviewagent-ade3ejh3bncydwhx.eastus2-01.azurewebsites.net">Interview Agent</a></h3>
+    <p>話し方、考え方、経験などをAIが学習するためのインタビューを行うエージェント</p>
+    <h3><a href="https://maibottraining-fcc0fdedbjefd5cu.centralus-01.azurewebsites.net">Chat for Training</a></h3>
+    <p>トレーニング用のMAI-Bot。チャットをしながら、答えの修正などを指示してください。</p>
+    <h3><a href="https://maibotknowledge-e9b5f2d5cvbafdh7.centralus-01.azurewebsites.net">Knowledge Base Collection</a></h3>
+    <p>MAI-Botにドキュメントを読ませ、知識の学習をさせてください。</p>
+    <h3><a href="#" id="chat-with-mai-home">Chat with MAI-Bot</a></h3>
+    <p>MAI-Botとチャットします。</p>
+  </body>
+  </html>`;
+
+    function loadPage(url) {
+      const frame = document.getElementById('contentFrame');
+      frame.removeAttribute('srcdoc'); frame.src = url;
+    }
+    function showHome() {
+      const frame = document.getElementById('contentFrame');
+      frame.removeAttribute('src'); frame.srcdoc = homeHTML;
+      frame.onload = () => {
+        const doc = frame.contentDocument || frame.contentWindow.document;
+        ['chat-with-mai', 'chat-with-mai-home'].forEach(id => {
+          const link = doc.getElementById(id);
+          if (link) {
+            link.addEventListener('click', e => {
+              e.preventDefault();
+              if (window.matchMedia('(max-width:768px)').matches) {
+                window.top.location.href = chatMaiUrl;
+              } else {
+                loadPage(chatMaiUrl);
+              }
+            });
+          }
+        });
+      };
+    }
+    window.addEventListener('DOMContentLoaded', () => {
+      showHome();
+      const chatMaiLink = document.getElementById('chat-with-mai');
+      if (chatMaiLink) {
+        chatMaiLink.addEventListener('click', e => {
+          e.preventDefault();
+          if (window.matchMedia('(max-width:768px)').matches) window.top.location.href = chatMaiUrl;
+          else loadPage(chatMaiUrl);
+        });
+      }
+    });
+  </script>
+</body>
+</html>
+
